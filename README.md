@@ -62,20 +62,22 @@ has disabled embedding for that video — you need a different upload of the son
 ## Comment setup (one-time, manual)
 
 Comments use [giscus](https://giscus.app), which stores each thread as a GitHub
-Discussion in this repo. The code is already wired up; it just needs four config
-values that can only be generated on github.com and giscus.app.
+Discussion in this repo.
 
-Until you do this, the comment drawer still opens and slides correctly — it just
-shows a "not configured yet" note instead of a thread.
+**This is already done** — the values are filled in and committed. The steps
+below are kept as a record of how they were obtained, and for pointing a fork or
+a second site at a different repo.
+
+Until the IDs are filled in, the comment drawer still opens and slides correctly
+— it just shows a "not configured yet" note instead of a thread.
 
 ### On github.com
 
 1. Make sure the repo is **public** (giscus can't read private repos).
 2. **Settings → General → Features →** tick **Discussions**.
-3. Go to the **Discussions** tab → **New category**:
-   - Name: `Comments`
-   - Format: **Announcement** — this matters. It stops anyone but you from
-     creating new top-level threads, so people can only reply to posts.
+3. Use the built-in **Announcements** category (or make your own, so long as its
+   format is **Announcement**). The format matters: it stops anyone but you from
+   creating new top-level threads, so people can only reply to posts.
 4. Install the giscus app: <https://github.com/apps/giscus> → **Install** →
    select **only** this repository.
 
@@ -87,7 +89,7 @@ shows a "not configured yet" note instead of a thread.
 7. Under **Page ↔ Discussions Mapping**, pick **"Discussion title contains a
    specific term"**. (The site overrides the term per post at runtime, so
    whatever you type in the box doesn't matter.)
-8. Under **Discussion Category**, choose **Comments**.
+8. Under **Discussion Category**, choose **Announcements**.
 9. Scroll to the generated `<script>` snippet at the bottom and copy the values
    for `data-repo-id` and `data-category-id`.
 
@@ -98,12 +100,17 @@ shows a "not configured yet" note instead of a thread.
     ```ts
     export const giscus = {
       repo: 'osfasofa/blackpeople.lol',
-      repoId: 'R_kgDO...',        // ← data-repo-id
-      category: 'Comments',
-      categoryId: 'DIC_kwDO...',  // ← data-category-id
+      repoId: 'R_kgDOTvdXOQ',                 // ← data-repo-id
+      category: 'Announcements',              // must match the ID below
+      categoryId: 'DIC_kwDOTvdXOc4DC_do',     // ← data-category-id
       ...
     };
     ```
+
+    Two values from giscus.app's snippet are deliberately **not** copied:
+    `data-term` (the site sets a per-post term at runtime) and `data-strict`,
+    which we keep at `1` so a slug like `despacito` can't match a discussion
+    titled `despacito-remix`.
 
 11. Commit and push. Comments are live.
 

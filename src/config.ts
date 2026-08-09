@@ -29,9 +29,9 @@ export const overlay = {
  */
 export const giscus = {
 	repo: 'osfasofa/blackpeople.lol',
-	repoId: '',
-	category: 'Comments',
-	categoryId: '',
+	repoId: 'R_kgDOTvdXOQ',
+	category: 'Announcements',
+	categoryId: 'DIC_kwDOTvdXOc4DC_do',
 	/** 'specific' + a per-post term is what lets one page host many threads. */
 	mapping: 'specific',
 	theme: 'dark',
