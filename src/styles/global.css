@@ -1,0 +1,415 @@
+/* ------------------------------------------------------------------ */
+/* Tokens                                                              */
+/* ------------------------------------------------------------------ */
+
+:root {
+	--bg: #000;
+	--fg: #fff;
+	--muted: rgb(255 255 255 / 0.62);
+	--chrome-bg: rgb(0 0 0 / 0.45);
+	--chrome-border: rgb(255 255 255 / 0.18);
+	--edge: max(1rem, env(safe-area-inset-left));
+	--font: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+		'Helvetica Neue', Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: var(--font);
+	-webkit-font-smoothing: antialiased;
+}
+
+body.is-drawer-open {
+	overflow: hidden;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+}
+
+/* ------------------------------------------------------------------ */
+/* Feed — full-viewport sections that click from one to the next        */
+/* ------------------------------------------------------------------ */
+
+.feed {
+	height: 100vh;
+	height: 100dvh;
+	overflow-y: scroll;
+	scroll-snap-type: y mandatory;
+	overscroll-behavior-y: contain;
+	/* Hidden so 100vw below can't be thrown off by a classic scrollbar. */
+	scrollbar-width: none;
+}
+
+.feed::-webkit-scrollbar {
+	display: none;
+}
+
+.video {
+	position: relative;
+	height: 100vh;
+	height: 100dvh;
+	scroll-snap-align: start;
+	scroll-snap-stop: always;
+	overflow: hidden;
+	background: var(--bg);
+}
+
+/*
+ * Crop-to-fill: size the frame to whichever of 16:9-by-width or
+ * 16:9-by-height is larger, then centre it. The overflow is clipped, so the
+ * video always covers the screen instead of letterboxing.
+ */
+.video__crop {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+
+/* Matches the mount div before the API runs, and the iframe it becomes. */
+.video__crop > * {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 100vw;
+	height: 56.25vw; /* 100 / (16/9) */
+	min-height: 100vh;
+	min-height: 100dvh;
+	min-width: 177.7778vh; /* 100 * (16/9) */
+	min-width: 177.7778dvh;
+	border: 0;
+	pointer-events: none;
+}
+
+/* Full-bleed tap target, underneath the overlay and buttons. */
+.video__tap {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	appearance: none;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ */
+/* OVERLAY — title + blurb over the bottom of the video                */
+/*                                                                     */
+/* Restyle freely; nothing else depends on these rules. To remove the  */
+/* overlay entirely, set `overlay.show = false` in src/config.ts.      */
+/* ------------------------------------------------------------------ */
+
+.overlay {
+	position: absolute;
+	inset: auto 0 0 0;
+	z-index: 2;
+	pointer-events: none;
+	padding: 6rem var(--edge) calc(1.75rem + env(safe-area-inset-bottom));
+	background: linear-gradient(
+		to top,
+		rgb(0 0 0 / 0.78) 0%,
+		rgb(0 0 0 / 0.45) 42%,
+		transparent 100%
+	);
+}
+
+.overlay__title {
+	margin: 0;
+	font-size: clamp(1.05rem, 3.4vw, 1.4rem);
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	text-wrap: balance;
+}
+
+.overlay__blurb {
+	margin: 0.4rem 0 0;
+	max-width: 46ch;
+	font-size: clamp(0.85rem, 2.6vw, 0.95rem);
+	line-height: 1.45;
+	color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Chrome — sound toggle and comment button                            */
+/* ------------------------------------------------------------------ */
+
+.chrome-button {
+	display: grid;
+	place-items: center;
+	appearance: none;
+	cursor: pointer;
+	border: 1px solid var(--chrome-border);
+	background: var(--chrome-bg);
+	color: var(--fg);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border-radius: 999px;
+	transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.chrome-button:hover {
+	background: rgb(0 0 0 / 0.65);
+}
+
+.chrome-button:active {
+	transform: scale(0.94);
+}
+
+.chrome-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* Sound ------------------------------------------------------------ */
+
+.sound {
+	position: fixed;
+	z-index: 20;
+	top: calc(var(--edge) + env(safe-area-inset-top));
+	right: var(--edge);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 2.75rem;
+	padding: 0 0.85rem;
+	border-radius: 999px;
+}
+
+.sound__label {
+	font-size: 0.8rem;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+}
+
+/* Swap icon + label depending on state. */
+:root[data-sound='on'] .sound__label,
+:root[data-sound='on'] .sound__off {
+	display: none;
+}
+
+:root:not([data-sound='on']) .sound__on {
+	display: none;
+}
+
+:root:not([data-sound='on']) .sound {
+	animation: nudge 2.4s ease-in-out 1.2s 2;
+}
+
+@keyframes nudge {
+	0%,
+	100% {
+		transform: none;
+	}
+	50% {
+		transform: scale(1.05);
+	}
+}
+
+/* Comments --------------------------------------------------------- */
+
+.comment-button {
+	position: absolute;
+	z-index: 3;
+	right: var(--edge);
+	bottom: calc(2rem + env(safe-area-inset-bottom));
+	width: 2.9rem;
+	height: 2.9rem;
+	display: grid;
+	place-items: center;
+	appearance: none;
+	cursor: pointer;
+	border: 1px solid var(--chrome-border);
+	background: var(--chrome-bg);
+	color: var(--fg);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border-radius: 999px;
+	transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.comment-button:hover {
+	background: rgb(0 0 0 / 0.65);
+}
+
+.comment-button:active {
+	transform: scale(0.94);
+}
+
+.comment-button svg {
+	width: 1.3rem;
+	height: 1.3rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* ------------------------------------------------------------------ */
+/* Comment drawer                                                      */
+/* ------------------------------------------------------------------ */
+
+.drawer {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	background: rgb(0 0 0 / 0);
+	transition: background 0.3s ease;
+}
+
+.drawer.is-open {
+	background: rgb(0 0 0 / 0.55);
+}
+
+.drawer__panel {
+	position: absolute;
+	inset: auto 0 0 0;
+	display: flex;
+	flex-direction: column;
+	height: min(82dvh, 46rem);
+	background: #14161a;
+	border-top-left-radius: 1.1rem;
+	border-top-right-radius: 1.1rem;
+	box-shadow: 0 -12px 40px rgb(0 0 0 / 0.5);
+	transform: translateY(100%);
+	transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.drawer.is-open .drawer__panel {
+	transform: translateY(0);
+}
+
+.drawer__head {
+	position: relative;
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1.35rem 1rem 0.85rem;
+	border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.drawer__handle {
+	position: absolute;
+	top: 0.6rem;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 2.25rem;
+	height: 0.25rem;
+	border-radius: 999px;
+	background: rgb(255 255 255 / 0.22);
+}
+
+.drawer__title {
+	flex: 1;
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.drawer__close {
+	flex: none;
+	width: 2.1rem;
+	height: 2.1rem;
+	display: grid;
+	place-items: center;
+	appearance: none;
+	cursor: pointer;
+	border: 0;
+	border-radius: 999px;
+	background: rgb(255 255 255 / 0.08);
+	color: var(--fg);
+}
+
+.drawer__close:hover {
+	background: rgb(255 255 255 / 0.16);
+}
+
+.drawer__close svg {
+	width: 1.1rem;
+	height: 1.1rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+}
+
+.drawer__body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 0.85rem 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+.drawer__setup {
+	font-size: 0.875rem;
+	line-height: 1.55;
+	color: var(--muted);
+}
+
+.drawer__setup p {
+	margin: 0 0 0.6rem;
+}
+
+.drawer__setup strong {
+	color: var(--fg);
+}
+
+.drawer__setup code {
+	font-size: 0.85em;
+	padding: 0.1em 0.35em;
+	border-radius: 0.25rem;
+	background: rgb(255 255 255 / 0.1);
+}
+
+.drawer__setup a {
+	color: inherit;
+}
+
+.thread[hidden] {
+	display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Misc                                                                */
+/* ------------------------------------------------------------------ */
+
+:where(button):focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

@@ -1,2 +1,183 @@
 # blackpeople.lol
 
+A full-screen, scroll-snapped feed of YouTube music videos. One video per
+screen, TikTok-style. Static Astro site, no server, no database — every post is
+a markdown file.
+
+```bash
+npm install
+npm run dev      # http://localhost:4321
+```
+
+Node 22+ is required (Astro 7). This repo pins it via `.mise.toml`, so if you
+use mise it's automatic.
+
+---
+
+## Publishing a new post
+
+1. Create a file in `src/content/posts/`. The filename becomes the slug:
+
+   ```
+   src/content/posts/song-name.md
+   ```
+
+2. Fill in the frontmatter:
+
+   ```markdown
+   ---
+   title: 'Artist — Song Name'
+   youtube: dQw4w9WgXcQ
+   date: 2026-08-09
+   blurb: 'Optional one-liner. Delete this field if you don''t want one.'
+   ---
+   ```
+
+   | Field    | Required | Notes                                                          |
+   | -------- | -------- | -------------------------------------------------------------- |
+   | `title`  | yes      | Shown in the overlay and as the comment drawer heading.          |
+   | `youtube`| yes      | The **video ID only** — the bit after `v=`, not the full URL.    |
+   | `date`   | yes      | `YYYY-MM-DD`. Sorting is newest-first.                           |
+   | `blurb`  | no       | Small line under the title.                                      |
+
+3. Commit and push:
+
+   ```bash
+   git add src/content/posts/song-name.md
+   git commit -m "Add Artist — Song Name"
+   git push
+   ```
+
+That's it. Vercel rebuilds on push. No code changes needed, ever.
+
+**Two gotchas.** The body of the markdown file is ignored — only frontmatter is
+read. And the filename is the comment thread key, so **renaming a file orphans
+its existing comments**; pick the slug once and leave it.
+
+Not every video allows embedding. If a section renders black, the rights holder
+has disabled embedding for that video — you need a different upload of the song.
+
+---
+
+## Comment setup (one-time, manual)
+
+Comments use [giscus](https://giscus.app), which stores each thread as a GitHub
+Discussion in this repo. The code is already wired up; it just needs four config
+values that can only be generated on github.com and giscus.app.
+
+Until you do this, the comment drawer still opens and slides correctly — it just
+shows a "not configured yet" note instead of a thread.
+
+### On github.com
+
+1. Make sure the repo is **public** (giscus can't read private repos).
+2. **Settings → General → Features →** tick **Discussions**.
+3. Go to the **Discussions** tab → **New category**:
+   - Name: `Comments`
+   - Format: **Announcement** — this matters. It stops anyone but you from
+     creating new top-level threads, so people can only reply to posts.
+4. Install the giscus app: <https://github.com/apps/giscus> → **Install** →
+   select **only** this repository.
+
+### On giscus.app
+
+5. Open <https://giscus.app> and scroll to **Configuration**.
+6. Enter `osfasofa/blackpeople.lol` in the repository field. You should get a
+   green checkmark on all four prerequisite checks.
+7. Under **Page ↔ Discussions Mapping**, pick **"Discussion title contains a
+   specific term"**. (The site overrides the term per post at runtime, so
+   whatever you type in the box doesn't matter.)
+8. Under **Discussion Category**, choose **Comments**.
+9. Scroll to the generated `<script>` snippet at the bottom and copy the values
+   for `data-repo-id` and `data-category-id`.
+
+### In this repo
+
+10. Paste them into `src/config.ts`:
+
+    ```ts
+    export const giscus = {
+      repo: 'osfasofa/blackpeople.lol',
+      repoId: 'R_kgDO...',        // ← data-repo-id
+      category: 'Comments',
+      categoryId: 'DIC_kwDO...',  // ← data-category-id
+      ...
+    };
+    ```
+
+11. Commit and push. Comments are live.
+
+These IDs are **not secrets** — giscus embeds them in client-side HTML by
+design. Committing them is correct.
+
+### How threads are keyed
+
+The site is one continuously-scrolling page, so giscus's normal
+"one-thread-per-URL" mapping is useless here — every post shares the same URL.
+
+Instead each post uses `data-mapping="specific"` with its slug as the term, so
+`despacito.md` gets its own discussion titled `despacito`. The first time
+someone comments on a post, giscus creates that discussion automatically.
+
+The widget is only injected when a drawer is first opened — never on page load,
+so four comment iframes don't compete with the video for bandwidth. Once opened,
+a thread stays mounted and hidden, so reopening it is instant and doesn't lose a
+half-typed comment.
+
+---
+
+## Deploying
+
+Import the repo on [Vercel](https://vercel.com/new). Astro is auto-detected;
+no configuration and no adapter needed. Build `npm run build`, output `dist/`.
+`engines.node` in `package.json` pins the build to Node 22.
+
+---
+
+## Tweaking things
+
+**`src/config.ts`** — the knobs you're most likely to want:
+
+```ts
+export const overlay = {
+  show: true,       // false = completely bare feed, video only
+  showBlurb: true,  // keep titles, drop the blurbs
+};
+```
+
+**`src/styles/global.css`** — the gradient, type sizes and positioning live
+under the `OVERLAY` heading, isolated so you can restyle without touching
+anything else. The `--edge` token controls how far chrome sits from the screen
+edge.
+
+**Playback rules** are in `src/scripts/player.ts`. `ACTIVE_RATIO = 0.6` is the
+share of the screen a section needs before it becomes the playing one.
+
+### Sound behaviour
+
+Browsers won't allow unmuted autoplay, so the first video starts muted with a
+"Tap for sound" button top-right. One tap unmutes and that choice sticks in
+`sessionStorage` for the rest of the visit — every video after it plays with
+sound as it scrolls into view. The button then works as a normal mute toggle.
+
+Tapping the video pauses and resumes it. Opening a comment drawer pauses the
+video and closing it resumes.
+
+---
+
+## Layout
+
+```
+src/
+  config.ts              site + giscus + overlay settings
+  content.config.ts      post frontmatter schema
+  content/posts/*.md     one file per song
+  components/
+    VideoSection.astro   one full-screen video
+    CommentDrawer.astro  the slide-up panel (one, reused)
+  scripts/
+    player.ts            IFrame API, IntersectionObserver, sound
+    comments.ts          drawer + lazy giscus mounting
+  styles/global.css
+  pages/index.astro
+```

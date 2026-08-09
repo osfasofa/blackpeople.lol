@@ -1,0 +1,48 @@
+---
+import { giscus, isGiscusConfigured } from '../config';
+---
+
+<div
+	id="comment-drawer"
+	class="drawer"
+	hidden
+	data-configured={String(isGiscusConfigured)}
+	data-repo={giscus.repo}
+	data-repo-id={giscus.repoId}
+	data-category={giscus.category}
+	data-category-id={giscus.categoryId}
+	data-mapping={giscus.mapping}
+	data-theme={giscus.theme}
+	data-lang={giscus.lang}
+	data-reactions-enabled={giscus.reactionsEnabled}
+	data-input-position={giscus.inputPosition}
+>
+	<div class="drawer__panel" data-drawer-panel role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+		<header class="drawer__head">
+			<div class="drawer__handle" aria-hidden="true"></div>
+			<h2 class="drawer__title" id="drawer-title" data-drawer-title>Comments</h2>
+			<button class="drawer__close" type="button" data-drawer-close aria-label="Close comments">
+				<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M18 6 6 18M6 6l12 12"></path>
+				</svg>
+			</button>
+		</header>
+
+		<div class="drawer__body">
+			{
+				!isGiscusConfigured && (
+					<div class="drawer__setup">
+						<p><strong>Comments aren't configured yet.</strong></p>
+						<p>
+							Fill in <code>repoId</code> and <code>categoryId</code> in{' '}
+							<code>src/config.ts</code>. You generate both at{' '}
+							<a href="https://giscus.app" target="_blank" rel="noreferrer">giscus.app</a> — see
+							“Comment setup” in the README.
+						</p>
+					</div>
+				)
+			}
+			<div data-drawer-threads></div>
+		</div>
+	</div>
+</div>

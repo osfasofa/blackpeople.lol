@@ -1,0 +1,67 @@
+---
+import { getCollection } from 'astro:content';
+import CommentDrawer from '../components/CommentDrawer.astro';
+import VideoSection from '../components/VideoSection.astro';
+import { site } from '../config';
+import '../styles/global.css';
+
+const posts = (await getCollection('posts')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={site.description} />
+		<meta name="theme-color" content="#000000" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<link rel="preconnect" href="https://www.youtube.com" />
+		<link rel="preconnect" href="https://i.ytimg.com" />
+		<title>{site.title}</title>
+	</head>
+
+	<body>
+		<main class="feed">
+			{
+				posts.map((post) => (
+					<VideoSection
+						slug={post.id}
+						title={post.data.title}
+						youtube={post.data.youtube}
+						blurb={post.data.blurb}
+					/>
+				))
+			}
+		</main>
+
+		<button
+			id="sound-toggle"
+			class="chrome-button sound"
+			type="button"
+			aria-pressed="false"
+			aria-label="Turn sound on"
+		>
+			<svg class="sound__off" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+				<path d="M11 5 6 9H2v6h4l5 4V5z"></path>
+				<path d="m23 9-6 6M17 9l6 6"></path>
+			</svg>
+			<svg class="sound__on" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+				<path d="M11 5 6 9H2v6h4l5 4V5z"></path>
+				<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+			</svg>
+			<span class="sound__label">Tap for sound</span>
+		</button>
+
+		<CommentDrawer />
+
+		<script>
+			import '../scripts/player';
+			import '../scripts/comments';
+		</script>
+	</body>
+</html>
