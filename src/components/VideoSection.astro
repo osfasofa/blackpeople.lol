@@ -3,13 +3,22 @@ import { overlay } from '../config';
 
 interface Props {
 	slug: string;
-	title: string;
 	youtube: string;
+	title?: string;
 	blurb?: string;
 }
 
-const { slug, title, youtube, blurb } = Astro.props;
+const { slug, youtube, title, blurb } = Astro.props;
+
+const showTitle = overlay.show && Boolean(title);
 const showBlurb = overlay.show && overlay.showBlurb && Boolean(blurb);
+/* Without this the gradient would still paint over a post that has neither. */
+const showOverlay = showTitle || showBlurb;
+
+/* Titles are optional, so anything user-facing needs a fallback. */
+const sectionLabel = title ?? 'Video';
+const tapLabel = title ? `Play or pause ${title}` : 'Play or pause';
+const commentLabel = title ? `Comments on ${title}` : 'Comments';
 ---
 
 <section
@@ -17,20 +26,19 @@ const showBlurb = overlay.show && overlay.showBlurb && Boolean(blurb);
 	data-video-section
 	data-video-id={youtube}
 	data-slug={slug}
-	aria-label={title}
+	aria-label={sectionLabel}
 >
 	<div class="video__crop">
 		{/* The IFrame API swaps this div out for the iframe it creates. */}
 		<div id={`yt-${slug}`} data-video-mount></div>
 	</div>
 
-	<button class="video__tap" data-video-tap type="button" aria-label={`Play or pause ${title}`}
-	></button>
+	<button class="video__tap" data-video-tap type="button" aria-label={tapLabel}></button>
 
 	{
-		overlay.show && (
+		showOverlay && (
 			<div class="overlay">
-				<h2 class="overlay__title">{title}</h2>
+				{showTitle && <h2 class="overlay__title">{title}</h2>}
 				{showBlurb && <p class="overlay__blurb">{blurb}</p>}
 			</div>
 		)
@@ -40,8 +48,8 @@ const showBlurb = overlay.show && overlay.showBlurb && Boolean(blurb);
 		class="comment-button"
 		type="button"
 		data-comment-open={slug}
-		data-comment-label={title}
-		aria-label={`Comments on ${title}`}
+		data-comment-label={title ?? 'Comments'}
+		aria-label={commentLabel}
 	>
 		<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 			<path

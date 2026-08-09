@@ -5,9 +5,21 @@ import VideoSection from '../components/VideoSection.astro';
 import { site } from '../config';
 import '../styles/global.css';
 
-const posts = (await getCollection('posts')).sort(
-	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+/**
+ * Newest first. A post with no date is treated as the newest thing there is —
+ * dropping in a file with only a video ID should put it at the top of the feed,
+ * not silently bury it at the bottom where you'd never notice it.
+ *
+ * Equal timestamps (and two undated posts) fall back to the slug, so the order
+ * is always deterministic rather than depending on how the loader happened to
+ * walk the directory.
+ */
+const posts = (await getCollection('posts')).sort((a, b) => {
+	const at = a.data.date?.valueOf() ?? Infinity;
+	const bt = b.data.date?.valueOf() ?? Infinity;
+	if (at === bt) return a.id.localeCompare(b.id);
+	return bt - at;
+});
 ---
 
 <!doctype html>

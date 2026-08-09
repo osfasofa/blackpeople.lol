@@ -28,17 +28,38 @@ use mise it's automatic.
    ---
    title: 'Artist — Song Name'
    youtube: dQw4w9WgXcQ
-   date: 2026-08-09
-   blurb: 'Optional one-liner. Delete this field if you don''t want one.'
+   date: 2026-08-09T14:30:00-04:00
+   blurb: 'Optional one-liner.'
+   ---
+   ```
+
+   **Only `youtube` is required.** This is a complete, valid post:
+
+   ```markdown
+   ---
+   youtube: dQw4w9WgXcQ
    ---
    ```
 
    | Field    | Required | Notes                                                          |
    | -------- | -------- | -------------------------------------------------------------- |
-   | `title`  | yes      | Shown in the overlay and as the comment drawer heading.          |
-   | `youtube`| yes      | The **video ID only** — the bit after `v=`, not the full URL.    |
-   | `date`   | yes      | `YYYY-MM-DD`. Sorting is newest-first.                           |
-   | `blurb`  | no       | Small line under the title.                                      |
+   | `youtube`| **yes**  | The **video ID only** — the bit after `v=`, not the full URL.    |
+   | `title`  | no       | Omit it and no title renders. Nothing is fetched from YouTube.   |
+   | `date`   | no       | Date, or date **and time**. Omit it and the post goes on top.    |
+   | `blurb`  | no       | Small line under the title. Works with or without a title.       |
+
+   If a post has neither a title nor a blurb, the overlay gradient doesn't
+   render at all — you get bare video, not an empty smudge along the bottom.
+
+   **On dates.** Both `2026-08-09` and `2026-08-09T14:30:00-04:00` work. Include
+   the offset when you give a time: a bare `T14:30:00` is read as UTC by the YAML
+   parser, which can shove a post onto the wrong day in your timezone.
+
+   Undated posts sort **above** everything dated — dropping in a file with just a
+   video ID puts it at the top of the feed, rather than silently burying it at the
+   bottom where you'd never see it. Posts sharing a timestamp (and undated posts
+   among themselves) fall back to alphabetical order by filename, so the feed is
+   never in an arbitrary order.
 
 3. Commit and push:
 
