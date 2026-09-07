@@ -15,6 +15,19 @@ const showBlurb = overlay.show && overlay.showBlurb && Boolean(blurb);
 /* Without this the gradient would still paint over a post that has neither. */
 const showOverlay = showTitle || showBlurb;
 
+/*
+ * Shown over the iframe until the first frame is actually rolling, so
+ * YouTube's poster-with-play-button never gets a chance to appear.
+ *
+ * maxresdefault is missing for older uploads, and YouTube answers with a
+ * 120px "not found" picture instead of an error, so the swap to hqdefault is
+ * done by checking the decoded width rather than relying on onerror.
+ */
+const poster = `https://i.ytimg.com/vi/${youtube}/maxresdefault.jpg`;
+const posterFallback = `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`;
+const posterSwap =
+	'if(this.src!==this.dataset.fallback&&this.naturalWidth<=120)this.src=this.dataset.fallback';
+
 /* Titles are optional, so anything user-facing needs a fallback. */
 const sectionLabel = title ?? 'Video';
 const tapLabel = title ? `Play or pause ${title}` : 'Play or pause';
@@ -32,6 +45,17 @@ const commentLabel = title ? `Comments on ${title}` : 'Comments';
 		{/* The IFrame API swaps this div out for the iframe it creates. */}
 		<div id={`yt-${slug}`} data-video-mount></div>
 	</div>
+
+	<img
+		class="video__poster"
+		src={poster}
+		data-fallback={posterFallback}
+		alt=""
+		aria-hidden="true"
+		decoding="async"
+		onload={posterSwap}
+		onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback"
+	/>
 
 	<button class="video__tap" data-video-tap type="button" aria-label={tapLabel}></button>
 

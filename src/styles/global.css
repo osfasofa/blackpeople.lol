@@ -77,6 +77,22 @@ button {
 	overflow: hidden;
 }
 
+/* The thumbnail stands in until frames roll, then fades out of the way. */
+.video__poster {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+	pointer-events: none;
+	transition: opacity 0.25s ease;
+}
+
+.video[data-started='true'] .video__poster {
+	opacity: 0;
+}
+
 /* Matches the mount div before the API runs, and the iframe it becomes. */
 .video__crop > * {
 	position: absolute;
@@ -91,6 +107,13 @@ button {
 	min-width: 177.7778dvh;
 	border: 0;
 	pointer-events: none;
+	/* Hidden until the first PLAYING state — no YouTube poster, no play button. */
+	opacity: 0;
+	transition: opacity 0.25s ease;
+}
+
+.video[data-started='true'] .video__crop > * {
+	opacity: 1;
 }
 
 /* Full-bleed tap target, underneath the overlay and buttons. */
