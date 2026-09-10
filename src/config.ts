@@ -20,6 +20,22 @@ export const overlay = {
 };
 
 /**
+ * TIBH — the button in the top-left corner. Tapping it thinks up a random fact
+ * for today's date, pulled from blackfacts.com by the function in api/tibh.js.
+ *
+ * The date is part of the source URL (/facts/9/10), so the facts change by
+ * themselves each day; nothing here needs touching.
+ */
+export const tibh = {
+	show: true,
+	label: 'TIBH',
+	/** The Vercel Function. Not served by `astro dev` — see README. */
+	endpoint: '/api/tibh',
+	sourceName: 'blackfacts.com',
+	sourceHome: 'https://www.blackfacts.com',
+};
+
+/**
  * giscus — comments backed by GitHub Discussions.
  *
  * repoId and categoryId cannot be derived from code; you generate them on

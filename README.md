@@ -80,6 +80,49 @@ has disabled embedding for that video — you need a different upload of the son
 
 ---
 
+## TIBH
+
+The button in the top-left corner. Tap it and a thought bubble puffs up with a
+random fact for today's date; tap the bubble (or hit `Escape`) and you're back
+in the feed. The video pauses while it's open, the same as the comment drawer.
+
+Facts come from [blackfacts.com](https://www.blackfacts.com), whose URLs carry
+the month and day — `/facts/9/10` today, `/facts/9/11` tomorrow. Nothing needs
+redeploying for the date to roll over.
+
+**Why there's a server bit.** blackfacts.com doesn't send CORS headers, so the
+page can't fetch it directly — the browser refuses. `api/tibh.js` does the fetch
+instead, as a Vercel Function. It lives at the repo root, *outside* `src/`, so
+Astro never sees it: the site is still a plain static build with no adapter.
+
+| Where | What it does |
+| ----- | ------------ |
+| `api/tibh.js` | Fetches the day's page, pulls the facts out, answers JSON. |
+| `src/scripts/tibh.ts` | Button, bubble, random pick, dismiss. |
+| `src/components/ThoughtBubble.astro` | The markup. |
+| `src/config.ts` → `tibh` | Label, endpoint, source. `show: false` removes it. |
+
+**Two things worth knowing.**
+
+`astro dev` doesn't serve `api/` — that's Vercel's directory, not Astro's. In
+`npm run dev` the button still works, it just always shows the "couldn't think
+of anything" fallback with a link to the source. To exercise it locally you need
+`vercel dev` instead.
+
+The scraping in `extractFacts()` is the fragile part, as scraping always is. It
+tries three ways of reading the page — JSON-LD first, then links to individual
+fact pages, then card headings — and takes the first that yields anything. If
+blackfacts.com restyles, that one function is all that needs rewriting;
+everything downstream just consumes `{ text, url }`. When it finds nothing, or
+the site is down, the bubble says so and links out rather than sitting there
+empty.
+
+Responses are cached at the edge for six hours (`s-maxage`), and a warm function
+instance keeps each day in memory, so a busy day is a handful of requests
+upstream rather than one per visitor.
+
+---
+
 ## Comment setup (one-time, manual)
 
 Comments use [giscus](https://giscus.app), which stores each thread as a GitHub
@@ -196,16 +239,20 @@ video and closing it resumes.
 ## Layout
 
 ```
+api/
+  tibh.js                Vercel Function — scrapes the day's facts (not Astro's)
 src/
-  config.ts              site + giscus + overlay settings
+  config.ts              site + giscus + overlay + TIBH settings
   content.config.ts      post frontmatter schema
   content/posts/*.md     one file per song
   components/
     VideoSection.astro   one full-screen video
     CommentDrawer.astro  the slide-up panel (one, reused)
+    ThoughtBubble.astro  the TIBH button and its bubble
   scripts/
     player.ts            IFrame API, IntersectionObserver, sound
     comments.ts          drawer + lazy giscus mounting
+    tibh.ts              bubble open/close + random pick
   styles/global.css
   pages/index.astro
 ```

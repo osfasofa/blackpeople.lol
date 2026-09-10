@@ -1,0 +1,61 @@
+---
+import { tibh } from '../config';
+---
+
+{
+	tibh.show && (
+		<>
+			<button
+				id="tibh-button"
+				class="chrome-button tibh"
+				type="button"
+				data-tibh-open
+				aria-expanded="false"
+				aria-controls="tibh-bubble"
+				aria-label="Think of a fact for today"
+			>
+				{tibh.label}
+			</button>
+
+			<div
+				id="tibh-bubble"
+				class="thought"
+				hidden
+				data-tibh-bubble
+				data-endpoint={tibh.endpoint}
+				data-source-home={tibh.sourceHome}
+				data-source-name={tibh.sourceName}
+			>
+				{/* Two puffs trailing up towards the button, comic-strip style. */}
+				<span class="thought__puff thought__puff--small" aria-hidden="true" />
+				<span class="thought__puff thought__puff--big" aria-hidden="true" />
+
+				<div
+					class="thought__bubble"
+					data-tibh-panel
+					role="dialog"
+					aria-modal="true"
+					aria-label="A fact for today"
+					tabindex="-1"
+				>
+					<p class="thought__text" data-tibh-text aria-live="polite" />
+
+					<p class="thought__foot">
+						<a
+							class="thought__source"
+							data-tibh-source
+							href={tibh.sourceHome}
+							target="_blank"
+							rel="noreferrer"
+						>
+							{tibh.sourceName}
+						</a>
+						<span class="thought__hint" aria-hidden="true">
+							tap to dismiss
+						</span>
+					</p>
+				</div>
+			</div>
+		</>
+	)
+}
