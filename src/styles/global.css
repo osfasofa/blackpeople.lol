@@ -289,6 +289,153 @@ button {
 }
 
 /* ------------------------------------------------------------------ */
+/* TIBH — corner button and its thought bubble                         */
+/*                                                                     */
+/* The bubble is a white comic-strip blob with two puffs trailing up to */
+/* the button it came out of. Position is driven entirely by the two    */
+/* tokens below, so moving the button moves the whole assembly.         */
+/* ------------------------------------------------------------------ */
+
+:root {
+	--tibh-top: calc(var(--edge) + env(safe-area-inset-top));
+	--tibh-size: 2.75rem;
+}
+
+.tibh {
+	position: fixed;
+	z-index: 20;
+	top: var(--tibh-top);
+	left: var(--edge);
+	height: var(--tibh-size);
+	padding: 0 0.95rem;
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
+
+.thought {
+	position: fixed;
+	inset: 0;
+	z-index: 60;
+	cursor: pointer;
+	background: rgb(0 0 0 / 0);
+	transition: background 0.2s ease;
+}
+
+.thought.is-open {
+	background: rgb(0 0 0 / 0.3);
+}
+
+/* Puffs ------------------------------------------------------------ */
+
+.thought__puff {
+	position: absolute;
+	border-radius: 50%;
+	background: #fff;
+}
+
+.thought__puff--small {
+	width: 0.6rem;
+	height: 0.6rem;
+	top: calc(var(--tibh-top) + var(--tibh-size) + 0.45rem);
+	left: calc(var(--edge) + 0.85rem);
+}
+
+.thought__puff--big {
+	width: 1.05rem;
+	height: 1.05rem;
+	top: calc(var(--tibh-top) + var(--tibh-size) + 1.2rem);
+	left: calc(var(--edge) + 1.45rem);
+}
+
+/* Bubble ----------------------------------------------------------- */
+
+.thought__bubble {
+	position: absolute;
+	top: calc(var(--tibh-top) + var(--tibh-size) + 2.65rem);
+	left: var(--edge);
+	width: min(30rem, calc(100% - var(--edge) * 2));
+	/* Deliberately uneven, so it reads as drawn rather than as a card. */
+	border-radius: 2.4rem 2.8rem 2.6rem 3rem / 2.8rem 2.4rem 3rem 2.6rem;
+	padding: 1.4rem 1.6rem 1.15rem;
+	background: #fff;
+	color: #0b0b0b;
+	box-shadow: 0 1.25rem 2.5rem rgb(0 0 0 / 0.45);
+	max-height: calc(100dvh - var(--tibh-top) - var(--tibh-size) - 5rem);
+	overflow-y: auto;
+	outline: none;
+}
+
+.thought__text {
+	margin: 0;
+	font-size: clamp(0.98rem, 0.9rem + 0.4vw, 1.1rem);
+	line-height: 1.5;
+	font-weight: 500;
+	text-wrap: pretty;
+}
+
+.thought__foot {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	margin: 0.9rem 0 0;
+	font-size: 0.72rem;
+}
+
+.thought__source {
+	color: rgb(0 0 0 / 0.6);
+	text-underline-offset: 0.15em;
+}
+
+.thought__source:hover {
+	color: #0b0b0b;
+}
+
+.thought__hint {
+	color: rgb(0 0 0 / 0.38);
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+/* Pop-in: puffs first, then the bubble catches up. */
+.thought__bubble,
+.thought__puff {
+	opacity: 0;
+	transform: scale(0.55);
+	transform-origin: top left;
+	transition: opacity 0.16s ease, transform 0.2s cubic-bezier(0.2, 1.25, 0.4, 1);
+}
+
+.thought__puff--big {
+	transition-delay: 0.05s;
+}
+
+.thought__bubble {
+	transition-delay: 0.1s;
+}
+
+.thought.is-open .thought__bubble,
+.thought.is-open .thought__puff {
+	opacity: 1;
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.thought,
+	.thought__bubble,
+	.thought__puff {
+		transition: none;
+		transition-delay: 0s;
+	}
+
+	.thought__bubble,
+	.thought__puff {
+		transform: none;
+	}
+}
+
+/* ------------------------------------------------------------------ */
 /* Comment drawer                                                      */
 /* ------------------------------------------------------------------ */
 
