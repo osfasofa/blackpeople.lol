@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import CommentDrawer from '../components/CommentDrawer.astro';
+import ThoughtBubble from '../components/ThoughtBubble.astro';
 import VideoSection from '../components/VideoSection.astro';
 import { site } from '../config';
 import '../styles/global.css';
@@ -69,11 +70,14 @@ const posts = (await getCollection('posts')).sort((a, b) => {
 			<span class="sound__label">Tap for sound</span>
 		</button>
 
+		<ThoughtBubble />
+
 		<CommentDrawer />
 
 		<script>
 			import '../scripts/player';
 			import '../scripts/comments';
+			import '../scripts/tibh';
 		</script>
 	</body>
 </html>
